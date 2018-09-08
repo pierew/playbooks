@@ -1,42 +1,39 @@
 - hosts: all
   vars:
-    replSetName: "rs0"
-    initialMaster: "mongodb01"
+    replSetName: rs0
+    initialMaster: mongodb01
   tasks:
     - name: Install MongoDB Repository
       yum_repository:
-        name: "MongoDB Repository"
+        name: MongoDB Repository
         file: mongodb
-        baseurl: "https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.0/x86_64/"
+        baseurl: >-
+          https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.0/x86_64/
         gpgcheck: no
         enabled: yes
-
     - name: Installing MongoDB
       yum:
         name: mongodb-org
         state: present
-
     - name: Set up ReplicaSet
       lineinfile:
-        dest: "/etc/mongo/mongodb.conf"
-        line: {{ item }}
+        dest: /etc/mongo/mongodb.conf
+        line:
+          '[object Object]': null
         insertafter: EOF
       with_items:
-        - "replication:"
-        - "   replSetName: '{{ replSetName }}'"
-
+        - 'replication:'
+        - '   replSetName: ''{{ replSetName }}'''
     - name: Starting and Enabling MongoDB
       service:
         name: mongodb
         state: started
         enable: yes
-
-     - name: Initiating ReplicaSet
+    - name: Initiating ReplicaSet
       shell: mongo --eval "rs.initiate()"
-      when: ansible_hostname == initialMaster 
-    
+      when: ansible_hostname == initialMaster
     - name: Joining Member Nodes to ReplicaSet
-      shell: mongo --eval "rs.add({{ item }})"
+      shell: 'mongo --eval "rs.add({{ item }})"'
       with_inventory_hostnames:
-        - all:!initalMaster
+        - 'all:!initalMaster'
       when: ansible_hostname == initialMaster
